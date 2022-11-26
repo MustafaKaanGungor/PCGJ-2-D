@@ -11,31 +11,28 @@ public class Player : MonoBehaviour
     private Vector3 scale;
     private Animator animator;
 
-    private bool isGrounded;
-    public Transform feetPos;
-    public float checkRadius;
-    public LayerMask whatIsGround;
-    public float jumpforce;
+    public float jumpVelocity;
+    public float fallMultiplayer = 2.5f;
+    public float lowJumpMultiplayer = 1.5f;
 
-    private float JumpTimeCounter;
-    public float JumpTime;
-    private bool isJumping;
-    
     void Start()
     {
         scale = this.transform.position;
         animator = GetComponent<Animator>();
+        GregRB = GetComponent<Rigidbody2D>();
     }
 
     
     void FixedUpdate()
     {
+        //movement in x axis
         moveInput = Input.GetAxisRaw("Horizontal");
         GregRB.AddForce(Vector2.right * moveInput * accelerationForce);
-        Vector2 clampedVelocity = GregRB.velocity;
-        clampedVelocity.x = Mathf.Clamp(GregRB.velocity.x, -maxSpeed, maxSpeed);
-        GregRB.velocity = clampedVelocity;
+        //Vector2 clampedVelocity = GregRB.velocity;
+        //clampedVelocity.x = Mathf.Clamp(GregRB.velocity.x, -maxSpeed, maxSpeed);
+        //GregRB.velocity = clampedVelocity.x;
 
+        //animation
         animator.SetBool("Running", true);
 
         if (moveInput == 0)
@@ -56,26 +53,18 @@ public class Player : MonoBehaviour
             this.transform.localScale = scale;
         }
 
-        isGrounded = Physics2D.OverlapCircle(feetPos.position, checkRadius,whatIsGround);
-
-        if(isGrounded == true && Input.GetKeyDown(KeyCode.Space)){
-            GregRB.velocity = Vector2.up * jumpforce;
-            isJumping = true;
-            JumpTimeCounter = JumpTime;
-        }
-        if(isGrounded == true && Input.GetKey(KeyCode.Space) && isJumping == true){
-            if(JumpTimeCounter > 0)
-            {
-            GregRB.velocity = Vector2.up * jumpforce;
-            JumpTimeCounter -= Time.deltaTime;
-            }
-            else{
-                isJumping = false;
-            }
-        }
-        if(Input.GetKeyUp(KeyCode.Space))
+        //jump
+        if(Input.GetKeyDown("w"))
         {
-            isJumping= false;
+            GregRB.velocity = Vector2.up * jumpVelocity;
+        }
+        if(GregRB.velocity.y <0)
+        {
+            GregRB.velocity += Vector2.up * Physics2D.gravity.y * (fallMultiplayer - 1)* Time.deltaTime;
+        }
+        else if (GregRB.velocity.y >0 && !Input.GetKey("w"))
+        {
+            GregRB.velocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplayer - 1)* Time.deltaTime;
         }
     }
 }
